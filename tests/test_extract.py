@@ -104,6 +104,21 @@ def test_missing_due_assignee_and_no_actions_are_valid(snapshot):
     assert validate_output('{"actions":[],"summary":[]}', snapshot)["actions"] == []
 
 
+def test_explicit_absent_deadline_normalizes_only_when_source_supports_it(snapshot):
+    data = output()
+    action = data["actions"][0]
+    text = "Ерлан, проверь отчёт. Срок пока не назначен."
+    snapshot["segments"][0]["text"] = text
+    action["evidence"][0]["quote"] = text
+    action.update(due_text="срок пока не назначен", due_kind="unspecified")
+    result = validate_output(json.dumps(data), snapshot)["actions"][0]
+    assert result["due_text"] is None and result["due_kind"] == "unspecified"
+    assert result["evidence"][0]["quote"] == text
+    action["due_text"] = "срок неизвестен"
+    with pytest.raises(ValueError, match="unsupported_assignee_or_due"):
+        validate_output(json.dumps(data), snapshot)
+
+
 def test_duplicate_tasks_and_unsupported_summary_fail(snapshot):
     data = output()
     data["actions"].append(copy.deepcopy(data["actions"][0]))

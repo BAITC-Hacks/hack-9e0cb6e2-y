@@ -1,0 +1,16 @@
+[
+  {
+    "id": "reports_with_metrics",
+    "meeting": {
+      "title": "Синтетический отчёт по направлениям",
+      "occurred_on": null,
+      "timezone": "Asia/Almaty",
+      "participants": [],
+      "segments": [
+        {"id": "seg_1", "speaker_id": "SPEAKER_00", "start_ms": 0, "end_ms": 4000, "text": "Доклад по производству. Выпуск составил 94% от плана. Проблема: поставщик задержал сырьё."},
+        {"id": "seg_2", "speaker_id": "SPEAKER_01", "start_ms": 4000, "end_ms": 7000, "text": "По обучению показатель пока не назван. Проблема: у 12% сотрудников просрочены сертификаты."}
+      ]
+    },
+    "expected": {"actions": 0, "reports": 2, "indicator_contains": "94%", "problem_contains": "12%", "null_indicators": 1}
+  }
+]
