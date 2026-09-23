@@ -3,18 +3,19 @@
 Whisper small установлен и проверяется локальным CLI. Зависимости STT закреплены
 в `uv.lock` как дополнительный профиль `stt`; базовый web-профиль не загружает ML.
 PyTorch/pyannote установлены в дополнительном профиле `diarization`; community-1
-скачана после входа пользователя. LLM пока не установлена в окружение проекта.
+скачана после входа пользователя. Qwen3-4B Q4_K_M и llama.cpp b11124 установлены;
+локальное извлечение проверяется на небольших примерах. См. [фазу 4](PHASE_4_REPORT.md).
 Наличие STT не означает готовность голосового MVP. См. [отчёт](PHASE_1_REPORT.md).
 
 | Компонент | Кандидат | Условия |
 |---|---|---|
 | STT | faster-whisper + multilingual small, CPU int8 | MIT для faster-whisper и выбранных весов (model card) |
 | Диаризация | pyannote.audio + speaker-diarization-community-1 | Веса CC-BY-4.0, принятие условий доступа на Hugging Face |
-| LLM | llama.cpp + Qwen3-8B GGUF Q4_K_M | Веса Apache-2.0; локальный файл, без cloud API |
+| LLM | llama.cpp b11124 + Qwen3-4B GGUF Q4_K_M | Веса Apache-2.0; runtime MIT; локальный файл, без cloud API |
 
 Первичные источники: [faster-whisper](https://github.com/SYSTRAN/faster-whisper),
 [community-1](https://huggingface.co/pyannote/speaker-diarization-community-1),
-[Qwen3 GGUF](https://huggingface.co/Qwen/Qwen3-8B-GGUF),
+[Qwen3 GGUF](https://huggingface.co/Qwen/Qwen3-4B-GGUF),
 [llama.cpp](https://github.com/ggml-org/llama.cpp).
 faster-whisper документирует CPU int8; community-1 — загрузку с локального пути.
 Это основания для эксперимента, не измерения на нашем корпусе.
@@ -42,6 +43,11 @@ faster-whisper документирует CPU int8; community-1 — загруз
 одновременная загрузка всего конвейера неприемлема; сначала освободить память.
 Конкретный объём загрузок и пиковую RAM записать после выбора snapshot,
 не выдавать приблизительные оценки за проверенные требования.
+
+Для текущего LLM-профиля первоначальный кандидат 8B заменён на 4B при ~4,6 ГиБ
+свободной памяти. Файл GGUF — 2 497 280 256 байт; архив runtime — 18 558 390 байт.
+Подготовка: `python scripts/prepare_llm.py`. Контрольные суммы записаны в
+[manifest](llm-model-manifest.json); веса и бинарные файлы исключены из Git.
 
 CPU — стартовый профиль. GPU выбирать лишь после проверки VRAM и совместимости
 CUDA/cuDNN; скорость CPU и GPU не считается одинаковой. Для KK/mixed сравнить
