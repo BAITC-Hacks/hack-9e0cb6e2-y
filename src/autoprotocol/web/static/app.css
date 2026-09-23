@@ -224,6 +224,7 @@ main {
 }
 
 h1 {
+  overflow-wrap: anywhere;
   margin: 0 0 14px;
   font-size: clamp(2rem, 5vw, 3.1rem);
   line-height: 1.12;
@@ -375,6 +376,7 @@ summary { cursor: pointer; font-weight: 600; }
 .history-entry { border-top: 1px solid var(--glass-border); padding: 12px 0; }
 .analysis-panel { border-top: 1px solid var(--glass-border); padding: 16px 0; }
 .action-card { padding: 16px; border: 1px solid var(--glass-border); border-radius: 12px; margin: 12px 0; }
+.action-card label { margin: 12px 0; }
 .evidence-list { display: flex; flex-wrap: wrap; gap: 8px; }
 .stale-analysis { border-left: 4px solid var(--violet-deep); padding-left: 14px; }
 @media (max-width: 560px) {

@@ -46,7 +46,7 @@
       </div>
       <div class="status-body">
         <h2 id="status">Загрузить запись</h2>
-        <p>Получите транскрипт с говорящими и запустите анализ поручений. Экспорт пока недоступен.</p>
+        <p>Получите транскрипт, проверьте поручения и выгрузите протокол DOCX по выбранному шаблону.</p>
         <p>Русская речь проверена на тестовой записи; качество қазақша и mixed ещё проверяется.</p>
         <form id="upload-form" data-max-bytes="{{ max_upload_mb * 1024 * 1024 }}">
           <label>Название встречи<input name="title" required maxlength="200" placeholder="Рабочее совещание"></label>
@@ -84,7 +84,45 @@
           <button type="button" id="analyze-meeting">Составить поручения и саммари</button>
           <p id="analysis-request-error" role="alert"></p>
           <p id="analysis-message" role="status" aria-live="polite"></p>
-          <div id="analysis-result"></div>
+          <form id="analysis-review-form" hidden>
+            <p>Исправьте поля и отметьте проверенные пункты. «Исключить» убирает ошибочный пункт из будущего протокола, сохраняя его источники и историю.</p>
+            <p>Цитаты относятся к исходному анализу. Исправленный вами текст не считается цитатой модели.</p>
+            <div class="review-toolbar">
+              <button type="submit" id="save-analysis" disabled>Сохранить поручения и итоги</button>
+              <button type="button" id="reload-analysis">Загрузить сохранённые поручения</button>
+            </div>
+            <p id="analysis-review-message" role="status" aria-live="polite"></p>
+            <fieldset id="analysis-review-fields">
+              <legend>Проверка поручений и итогов</legend>
+              <div id="analysis-result"></div>
+            </fieldset>
+          </form>
+          <details id="analysis-history" hidden>
+            <summary>История изменений поручений и итогов</summary>
+            <div id="analysis-history-list"></div>
+          </details>
+          <form id="export-form">
+            <h3>Экспорт протокола</h3>
+            <p>В DOCX попадут сохранённые правки. Исключённые пункты не включаются в саммари и таблицы; непроверенные отмечаются. Текст совещания сохраняется полностью.</p>
+            <label>Шаблон<select id="export-template">
+              <option value="1">№1 — по темам, с таблицами поручений</option>
+              <option value="2">№2 — доклады, показатели, проблемы и поручения</option>
+            </select></label>
+            <label>Организация (если известна)<input id="export-organization" maxlength="200" placeholder="Название организации"></label>
+            <details>
+              <summary>Должности подтверждённых участников</summary>
+              <div id="export-roles"></div>
+            </details>
+            <details id="export-topic-options">
+              <summary>Разделить протокол на темы</summary>
+              <p>По умолчанию одна тема. Добавьте начало каждого следующего раздела в порядке реплик. Пункты саммари и поручения относятся к теме их первого источника.</p>
+              <div id="export-topics"></div>
+              <button type="button" id="add-export-topic">Добавить тему</button>
+            </details>
+            <p>Организация, должности и границы тем задаются для этой выгрузки; после обновления страницы их нужно ввести заново.</p>
+            <button type="submit" id="download-docx" disabled>Скачать протокол DOCX</button>
+            <p id="export-message" role="status" aria-live="polite">Сначала завершите анализ и сохраните исправления.</p>
+          </form>
         </section>
         <p id="source-review-notice" class="review-note" hidden></p>
         <form id="review-form">
