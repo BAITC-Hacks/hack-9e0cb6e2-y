@@ -75,10 +75,32 @@
       <h2 id="meeting-title"></h2>
       <p id="meeting-status" role="status" aria-live="polite"></p>
       <div id="meeting-result" hidden>
-        <p>Черновик: имена и правильность разделения говорящих не подтверждены.</p>
+        <p>Прослушайте запись, укажите имена и проверьте спорные реплики. Исправления сохраняются кнопкой ниже.</p>
         <audio id="meeting-audio" controls preload="metadata"></audio>
         <p id="result-summary"></p>
-        <div id="transcript"></div>
+        <p id="source-review-notice" class="review-note" hidden></p>
+        <form id="review-form">
+          <div class="review-toolbar">
+            <button type="submit" class="save-review" disabled>Сохранить изменения</button>
+            <button type="button" id="reload-review">Загрузить сохранённую версию</button>
+          </div>
+          <p id="review-message" role="status" aria-live="polite"></p>
+          <fieldset id="review-fields">
+            <legend>Проверка транскрипта</legend>
+            <h3>Кто говорит</h3>
+            <p class="review-note">Укажите только известные вам имена. Пустое имя оставляет метку голоса; одинаковые имена не объединяют голоса автоматически.</p>
+            <div id="participants"></div>
+            <h3>Реплики</h3>
+            <p class="review-note">Можно исправить текст и выбрать говорящего. Таймкоды и исходные слова сохраняются. После прослушивания отметьте «Реплика проверена».</p>
+            <div id="transcript"></div>
+          </fieldset>
+          <button type="submit" class="save-review" disabled>Сохранить изменения</button>
+        </form>
+        <details id="revision-history">
+          <summary>История сохранённых изменений</summary>
+          <p>Последние 100 сохранений. Показываются прежние и новые значения.</p>
+          <div id="history-list"></div>
+        </details>
       </div>
     </section>
 
