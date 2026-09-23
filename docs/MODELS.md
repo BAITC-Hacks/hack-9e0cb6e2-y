@@ -1,12 +1,14 @@
 # Локальные модели: кандидаты и подготовка
 
-Ни одна модель пока не установлена и не проверена. Пакеты ML намеренно не входят
-в базовый lock: совместимый стек PyTorch/pyannote/CTranslate2 фиксируется после
-реального прогона. Наличие Python-каркаса не означает готовность голосового MVP.
+Whisper small установлен и проверяется локальным CLI. Зависимости STT закреплены
+в `uv.lock` как дополнительный профиль `stt`; базовый web-профиль не загружает ML.
+PyTorch/pyannote установлены в дополнительном профиле `diarization`; community-1
+скачана после входа пользователя. LLM пока не установлена в окружение проекта.
+Наличие STT не означает готовность голосового MVP. См. [отчёт](PHASE_1_REPORT.md).
 
 | Компонент | Кандидат | Условия |
 |---|---|---|
-| STT | faster-whisper + multilingual small, CPU int8 | MIT для faster-whisper; проверить лицензию выбранных весов |
+| STT | faster-whisper + multilingual small, CPU int8 | MIT для faster-whisper и выбранных весов (model card) |
 | Диаризация | pyannote.audio + speaker-diarization-community-1 | Веса CC-BY-4.0, принятие условий доступа на Hugging Face |
 | LLM | llama.cpp + Qwen3-8B GGUF Q4_K_M | Веса Apache-2.0; локальный файл, без cloud API |
 
