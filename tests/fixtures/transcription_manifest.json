@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "description": "Local synthetic RU smoke only. This is not a labelled real-meeting corpus. Missing KK and mixed speech are explicitly not evaluated.",
+  "samples": [
+    {
+      "id": "ru-windows-irina-smoke",
+      "language": "ru",
+      "dataset_kind": "synthetic",
+      "reference": {"format": "text", "path": "ru_smoke.txt"},
+      "hypothesis": {"format": "segments_json", "field": "segments", "path": "../../data/smoke/ru-stt.json"}
+    },
+    {
+      "id": "kk-human-recording-pending",
+      "language": "kk",
+      "dataset_kind": "human_recording",
+      "status": "not_evaluated",
+      "reason": "No manually labelled Kazakh recording is included in the repository"
+    },
+    {
+      "id": "mixed-human-recording-pending",
+      "language": "mixed",
+      "dataset_kind": "human_recording",
+      "status": "not_evaluated",
+      "reason": "No manually labelled code-switching recording is included in the repository"
+    }
+  ]
+}
