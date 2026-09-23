@@ -3,19 +3,111 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Автопротокол</title>
+  <title>JazAI</title>
   <link rel="stylesheet" href="{{ url_for('static', path='app.css') }}">
+  <script defer src="{{ url_for('static', path='app.js') }}"></script>
 </head>
 <body>
+  <div class="bg-orbs" aria-hidden="true">
+    <span class="orb orb-teal"></span>
+    <span class="orb orb-violet"></span>
+    <span class="orb orb-green"></span>
+  </div>
+
   <main>
-    <p class="eyebrow">HackAlem AI</p>
-    <h1>Автопротоколирование совещаний</h1>
-    <p>Поручения, ответственные и сроки с подтверждением по записи встречи.</p>
-    <section aria-labelledby="status">
-      <h2 id="status">Подготовлен каркас приложения</h2>
-      <p>Загрузка записей, распознавание речи и экспорт пока недоступны.</p>
-      <p>Следующий этап — проверка локальных моделей на русской, казахской и смешанной речи.</p>
+    <header class="topbar glass">
+      <span class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span class="brand-name">JazAI</span>
+      </span>
+      <span class="pill status-pill">
+        <span class="dot" aria-hidden="true"></span>
+        Локальный транскрипт
+      </span>
+    </header>
+
+    <section class="hero glass">
+      <p class="eyebrow">HackAlem AI · автопротоколирование</p>
+      <h1>Автопротоколирование совещаний</h1>
+      <p class="lede">Поручения, ответственные и сроки с подтверждением по записи встречи.</p>
+      <div class="chips">
+        <span class="chip chip-teal">Русский</span>
+        <span class="chip chip-violet">Қазақша</span>
+        <span class="chip chip-green">Mixed</span>
+      </div>
     </section>
+
+    <section class="status-card glass" aria-labelledby="status">
+      <div class="status-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2 15 8.5 22 9.5 17 14.3 18.2 21 12 17.7 5.8 21 7 14.3 2 9.5 9 8.5Z"
+                stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="status-body">
+        <h2 id="status">Загрузить запись</h2>
+        <p>Получите черновой транскрипт с говорящими. Поручения и экспорт пока недоступны.</p>
+        <p>Русская речь проверена на тестовой записи; качество қазақша и mixed ещё проверяется.</p>
+        <form id="upload-form" data-max-bytes="{{ max_upload_mb * 1024 * 1024 }}">
+          <label>Название встречи<input name="title" required maxlength="200" placeholder="Рабочее совещание"></label>
+          <div class="form-grid">
+            <label>Дата встречи (если известна)<input name="occurred_on" type="date"></label>
+            <label>Часовой пояс<input name="timezone" value="Asia/Almaty" required></label>
+          </div>
+          <label>Аудио или видео<input name="recording" type="file" required
+            accept=".mp3,.wav,.mp4,.m4a,.mkv,.webm,.ogg,.flac,.aac"></label>
+          <p>До {{ max_upload_mb }} МБ и {{ max_duration_minutes }} минут. Обработка на этом компьютере.</p>
+          <label class="consent"><input name="consent" type="checkbox" required>
+            Подтверждаю право обработки этой записи и уведомление участников.</label>
+          <button type="submit">Загрузить и обработать</button>
+          <p id="upload-message" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="glass work-panel" aria-labelledby="meetings-title">
+      <h2 id="meetings-title">Мои встречи</h2>
+      <p id="list-message" role="status"></p>
+      <div id="meeting-list"></div>
+    </section>
+
+    <section id="meeting-panel" class="glass work-panel" hidden>
+      <h2 id="meeting-title"></h2>
+      <p id="meeting-status" role="status" aria-live="polite"></p>
+      <div id="meeting-result" hidden>
+        <p>Черновик: имена и правильность разделения говорящих не подтверждены.</p>
+        <audio id="meeting-audio" controls preload="metadata"></audio>
+        <p id="result-summary"></p>
+        <div id="transcript"></div>
+      </div>
+    </section>
+
+    <section class="steps" aria-label="Планируемый конвейер">
+      <div class="step glass">
+        <span class="step-num">1</span>
+        <span class="step-label">Загрузка записи</span>
+      </div>
+      <div class="step glass">
+        <span class="step-num">2</span>
+        <span class="step-label">Распознавание речи</span>
+      </div>
+      <div class="step glass">
+        <span class="step-num">3</span>
+        <span class="step-label">Диаризация</span>
+      </div>
+      <div class="step glass">
+        <span class="step-num">4</span>
+        <span class="step-label">Поручения и саммари</span>
+      </div>
+      <div class="step glass">
+        <span class="step-num">5</span>
+        <span class="step-label">Экспорт протокола</span>
+      </div>
+    </section>
+
+    <footer class="foot">
+      <p>Закрытый контур: распознавание и анализ выполняются локально.</p>
+    </footer>
   </main>
 </body>
 </html>
