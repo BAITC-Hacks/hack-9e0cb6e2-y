@@ -6,8 +6,9 @@ import uuid
 
 from pydantic import Field
 
-from autoprotocol import review
+from autoprotocol import analysis_review, review
 from autoprotocol.jobs import LEASE_SECONDS, MAX_ATTEMPTS
+from autoprotocol.pipeline.extract import PROMPT_VERSION
 from autoprotocol.storage import connect
 
 
@@ -39,8 +40,9 @@ def enqueue(database, meeting_id, request):
         if len(payload) > 40000:
             raise review.ReviewError(422, "Транскрипт слишком большой для текущего профиля LLM.")
         existing = db.execute(
-            "SELECT * FROM analyses WHERE meeting_id=? AND source_digest=? AND revision=?",
-            (meeting_id, digest, revision),
+            "SELECT * FROM analyses WHERE meeting_id=? AND source_digest=? AND revision=? "
+            "AND prompt_version=?",
+            (meeting_id, digest, revision, PROMPT_VERSION),
         ).fetchone()
         if existing:
             if existing["status"] == "failed":
@@ -53,18 +55,18 @@ def enqueue(database, meeting_id, request):
         identifier = uuid.uuid4().hex
         db.execute(
             """INSERT INTO analyses
-            (id,meeting_id,source_digest,revision,input_json,status,created_at)
-            VALUES (?,?,?,?,?,'queued',?)""",
-            (identifier, meeting_id, digest, revision, payload, time.time()),
+            (id,meeting_id,source_digest,revision,input_json,status,created_at,prompt_version)
+            VALUES (?,?,?,?,?,'queued',?,?)""",
+            (identifier, meeting_id, digest, revision, payload, time.time(), PROMPT_VERSION),
         )
         return identifier
 
 
-def latest(database, meeting_id):
+def latest(database, meeting_id, *, original=False):
     with connect(database) as db:
         db.execute("BEGIN")
-        original, digest = review.source(db, meeting_id)
-        current = review.view(db, meeting_id, original, digest)
+        transcript, digest = review.source(db, meeting_id)
+        current = review.view(db, meeting_id, transcript, digest)
         row = db.execute(
             "SELECT * FROM analyses WHERE meeting_id=? "
             "ORDER BY (source_digest=? AND revision=?) DESC,created_at DESC LIMIT 1",
@@ -78,9 +80,14 @@ def latest(database, meeting_id):
             "error": row["error"],
             "revision": row["revision"],
             "source_digest": row["source_digest"],
+            "upgrade_available": row["prompt_version"] != PROMPT_VERSION,
             "stale": row["source_digest"] != digest
             or row["revision"] != current["review"]["revision"],
-            "result": json.loads(row["result_json"]) if row["result_json"] else None,
+            "result": (
+                (json.loads(row["result_json"]) if original else analysis_review.view(db, row))
+                if row["result_json"]
+                else None
+            ),
         }
 
 

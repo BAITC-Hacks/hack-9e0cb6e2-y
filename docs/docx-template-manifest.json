@@ -1,0 +1,76 @@
+{
+  "1": {
+    "reference_sha256": "c2f5210106b96317730a06f71c29990f3876f70533b6c8671b30d04396a856e2",
+    "template_sha256": "c2fc285ab96318a7f5b7feb3336864a5c142961289705aa19ab67a3774ffdb3c",
+    "slots": {
+      "title": 0,
+      "organization": 1,
+      "subject": 2,
+      "heading": 3,
+      "speaker": 4,
+      "body": 5,
+      "summary_heading": 70,
+      "subheading": 71,
+      "actions": 73,
+      "divider": 18
+    },
+    "preserved_parts": {
+      "word/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "word/_rels/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "word/_rels/document.xml.rels": "df7e89495fb46d367e614a8dbb369fc166cd752e188481edac80fd553272f68e",
+      "word/styles.xml": "afa039a904677e09ceebd82646b4245cf773c6a09d50324e304a016703632538",
+      "docProps/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "word/numbering.xml": "aae067c32dd80d876358a0cc5ecef7f7442662e3648c0ecd9f1888677ddb4a6e",
+      "_rels/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "_rels/.rels": "641d22a23aa9eb550103a7a01471eaeda5e84c69413e6e03e7fd290b4811a756",
+      "[Content_Types].xml": "685dca5eb0e6688c9f4218f6810f21fdf6e86a4b8bf1d7bf74c9eb667ebc2c09",
+      "docProps/app.xml": "579eba9a8d602575736c3880cf5b529aabbadee0e8cc0e4df8573db0ceadbd4b",
+      "word/footnotes.xml": "774ce254f01cde1079d43e81a0db30ac82b3b2bae875b07c4fe28403ba30b6a9",
+      "word/_rels/footnotes.xml.rels": "bf64631f0bc7bd46712fef822bcfb22e069fa5779e133980ca0c9d81f00efc09",
+      "word/endnotes.xml": "52f6c33e62c233e0d9f9c41ec259ffd943ea9cdc413293d43e6ffb213682a5cf",
+      "word/_rels/endnotes.xml.rels": "bf64631f0bc7bd46712fef822bcfb22e069fa5779e133980ca0c9d81f00efc09",
+      "word/settings.xml": "36b68f012adfd6d2f8faaebc8d101632d3529e9d9fd57d6ef92198841e96f09e",
+      "word/comments.xml": "dd2d62f68c6fd01fc4d7d44081587af54ea3e135b9486cc44fa3c62d087adfec",
+      "word/_rels/comments.xml.rels": "bf64631f0bc7bd46712fef822bcfb22e069fa5779e133980ca0c9d81f00efc09",
+      "word/fontTable.xml": "a746dbb577ec5d68983d659707c0750ca89d40b9d3316e31af331d5e1c736bad",
+      "word/_rels/fontTable.xml.rels": "bf64631f0bc7bd46712fef822bcfb22e069fa5779e133980ca0c9d81f00efc09"
+    }
+  },
+  "2": {
+    "reference_sha256": "0bcee5d2fdbed172beaaa758627bb78dd0b523ab48789833e949e62da61dfdb5",
+    "template_sha256": "35c804a8b658bb46ba1384ff1e2246c6129a8cfea186bb86a4d54280107346c2",
+    "slots": {
+      "title": 0,
+      "organization": 1,
+      "subject": 2,
+      "heading": 3,
+      "speaker": 4,
+      "body": 5,
+      "summary_heading": 60,
+      "subheading": 63,
+      "reports": 62,
+      "actions": 64
+    },
+    "preserved_parts": {
+      "word/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "word/_rels/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "word/_rels/document.xml.rels": "df7e89495fb46d367e614a8dbb369fc166cd752e188481edac80fd553272f68e",
+      "word/styles.xml": "afa039a904677e09ceebd82646b4245cf773c6a09d50324e304a016703632538",
+      "docProps/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "word/numbering.xml": "aae067c32dd80d876358a0cc5ecef7f7442662e3648c0ecd9f1888677ddb4a6e",
+      "_rels/": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "_rels/.rels": "641d22a23aa9eb550103a7a01471eaeda5e84c69413e6e03e7fd290b4811a756",
+      "[Content_Types].xml": "685dca5eb0e6688c9f4218f6810f21fdf6e86a4b8bf1d7bf74c9eb667ebc2c09",
+      "docProps/app.xml": "579eba9a8d602575736c3880cf5b529aabbadee0e8cc0e4df8573db0ceadbd4b",
+      "word/footnotes.xml": "774ce254f01cde1079d43e81a0db30ac82b3b2bae875b07c4fe28403ba30b6a9",
+      "word/_rels/footnotes.xml.rels": "bf64631f0bc7bd46712fef822bcfb22e069fa5779e133980ca0c9d81f00efc09",
+      "word/endnotes.xml": "52f6c33e62c233e0d9f9c41ec259ffd943ea9cdc413293d43e6ffb213682a5cf",
+      "word/_rels/endnotes.xml.rels": "bf64631f0bc7bd46712fef822bcfb22e069fa5779e133980ca0c9d81f00efc09",
+      "word/settings.xml": "36b68f012adfd6d2f8faaebc8d101632d3529e9d9fd57d6ef92198841e96f09e",
+      "word/comments.xml": "dd2d62f68c6fd01fc4d7d44081587af54ea3e135b9486cc44fa3c62d087adfec",
+      "word/_rels/comments.xml.rels": "bf64631f0bc7bd46712fef822bcfb22e069fa5779e133980ca0c9d81f00efc09",
+      "word/fontTable.xml": "a746dbb577ec5d68983d659707c0750ca89d40b9d3316e31af331d5e1c736bad",
+      "word/_rels/fontTable.xml.rels": "bf64631f0bc7bd46712fef822bcfb22e069fa5779e133980ca0c9d81f00efc09"
+    }
+  }
+}

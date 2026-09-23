@@ -22,6 +22,7 @@ def main() -> None:
                 "llm_runtime_available": config.llm_server.is_file(),
                 "llm_weights_available": config.llm_model.is_file(),
                 "draft_analysis_implemented": True,
+                "docx_export_implemented": True,
                 "full_protocol_implemented": False,
                 "note": "Наличие каталога не подтверждает готовность моделей",
             },

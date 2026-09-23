@@ -9,12 +9,12 @@ from pathlib import Path
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import FastAPI, Header, HTTPException, Query, Request
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from autoprotocol import analysis, jobs, review
+from autoprotocol import analysis, analysis_review, export_docx, jobs, review
 from autoprotocol.config import Settings
 from autoprotocol.media import probe
 from autoprotocol.storage import check_database, initialize
@@ -92,8 +92,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"id": analysis.enqueue(config.database_path, meeting_id, payload)}
 
     @app.get("/api/meetings/{meeting_id}/analysis")
-    def analysis_status(meeting_id: str):
-        return analysis.latest(config.database_path, meeting_id)
+    def analysis_status(meeting_id: str, original: bool = False):
+        return analysis.latest(config.database_path, meeting_id, original=original)
+
+    @app.patch("/api/meetings/{meeting_id}/analysis/{analysis_id}/review")
+    def edit_analysis(
+        meeting_id: str, analysis_id: str, patch: analysis_review.AnalysisPatch, request: Request
+    ):
+        require_same_origin(request)
+        return analysis_review.save(config.database_path, meeting_id, analysis_id, patch)
+
+    @app.get("/api/meetings/{meeting_id}/analysis/{analysis_id}/revisions")
+    def analysis_history(meeting_id: str, analysis_id: str):
+        return analysis_review.history(config.database_path, meeting_id, analysis_id)
 
     @app.get("/api/meetings/{meeting_id}/audio")
     def meeting_audio(meeting_id: str):
@@ -101,6 +112,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if row["status"] != "ready":
             raise HTTPException(409, "Аудио ещё не готово.")
         return FileResponse(row["audio_path"], media_type="audio/wav")
+
+    @app.post("/api/meetings/{meeting_id}/export.docx")
+    def download_protocol(meeting_id: str, payload: export_docx.ExportRequest, request: Request):
+        require_same_origin(request)
+        content = export_docx.export(config.database_path, meeting_id, payload)
+        return Response(
+            content,
+            media_type=export_docx.MIME,
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="protocol-template-{payload.template}.docx"'
+                ),
+                "Cache-Control": "no-store",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
 
     @app.post("/api/meetings", status_code=202)
     async def upload(
@@ -200,7 +227,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             content={
                 "status": "not_ready",
                 "database": "ok",
-                "reason": "Доступны транскрипт и черновой анализ; экспорт ещё не реализован",
+                "reason": "Транскрипт, черновой анализ и DOCX доступны; "
+                "приёмка качества RU/KK/mixed и полного offline-сценария не завершена",
             },
         )
 

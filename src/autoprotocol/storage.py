@@ -72,6 +72,42 @@ def initialize(database_path: Path) -> None:
             UNIQUE(meeting_id, source_digest, revision)
         )""")
         connection.execute("INSERT OR IGNORE INTO schema_version(version) VALUES (4)")
+        connection.execute("""CREATE TABLE IF NOT EXISTS analysis_reviews (
+            analysis_id TEXT PRIMARY KEY REFERENCES analyses(id),
+            revision INTEGER NOT NULL, edits_json TEXT NOT NULL
+        )""")
+        connection.execute("""CREATE TABLE IF NOT EXISTS analysis_revisions (
+            analysis_id TEXT NOT NULL REFERENCES analyses(id), revision INTEGER NOT NULL,
+            changed_at TEXT NOT NULL, changes_json TEXT NOT NULL,
+            PRIMARY KEY(analysis_id, revision)
+        )""")
+        connection.execute("INSERT OR IGNORE INTO schema_version(version) VALUES (5)")
+        if not connection.execute("SELECT 1 FROM schema_version WHERE version=6").fetchone():
+            # Retain old runs and their manual revisions when upgrading the extraction schema.
+            connection.execute("ALTER TABLE analyses RENAME TO analyses_legacy")
+            connection.execute("""CREATE TABLE analyses (
+                id TEXT PRIMARY KEY, meeting_id TEXT NOT NULL REFERENCES meetings(id),
+                source_digest TEXT NOT NULL, revision INTEGER NOT NULL, input_json TEXT NOT NULL,
+                status TEXT NOT NULL CHECK(status IN ('queued','processing','ready','failed')),
+                created_at REAL NOT NULL, attempt INTEGER NOT NULL DEFAULT 0,
+                owner TEXT, lease_until REAL, error TEXT, result_json TEXT,
+                prompt_version TEXT NOT NULL,
+                UNIQUE(meeting_id, source_digest, revision, prompt_version)
+            )""")
+            connection.execute(
+                "INSERT INTO analyses SELECT *, 'meeting-evidence-v2' FROM analyses_legacy"
+            )
+            for table in ("analysis_reviews", "analysis_revisions"):
+                sql = connection.execute(
+                    "SELECT sql FROM sqlite_master WHERE type='table' AND name=?", (table,)
+                ).fetchone()[0]
+                sql = sql.replace(table, table + "_new").replace("analyses_legacy", "analyses")
+                connection.execute(sql)
+                connection.execute(f"INSERT INTO {table}_new SELECT * FROM {table}")
+                connection.execute(f"DROP TABLE {table}")
+                connection.execute(f"ALTER TABLE {table}_new RENAME TO {table}")
+            connection.execute("DROP TABLE analyses_legacy")
+            connection.execute("INSERT INTO schema_version(version) VALUES (6)")
 
 
 def check_database(database_path: Path) -> None:
