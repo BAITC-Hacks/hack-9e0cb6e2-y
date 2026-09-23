@@ -1,5 +1,10 @@
+import json
+import subprocess
 import time
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+import pytest
 
 from autoprotocol import jobs
 from autoprotocol.config import Settings
@@ -83,3 +88,78 @@ def test_completed_job_does_not_run_again_after_restart(tmp_path):
     initialize(path)
     assert jobs.claim(path) is None
     assert jobs.get(path, "meeting")["result_path"] == "result.json"
+
+
+@pytest.mark.parametrize("segments", [[], [{"text": " \n "}]])
+def test_no_recognized_speech_stops_before_diarization(tmp_path, monkeypatch, segments):
+    config = Settings(data_dir=tmp_path, models_dir=tmp_path / "models", _env_file=None)
+    for name in ("faster-whisper-small/model.bin", "pyannote-community-1/config.yaml"):
+        model = config.models_dir / name
+        model.parent.mkdir(parents=True, exist_ok=True)
+        model.touch()
+    initialize(config.database_path)
+    seed(config.database_path)
+    job = jobs.claim(config.database_path)
+    stages = []
+
+    def run_stage(command, config, job):
+        stage = jobs.get(config.database_path, job["id"])["stage"]
+        stages.append(stage)
+        if stage == "transcribing":
+            Path(command[command.index("--output") + 1]).write_text(
+                json.dumps({"segments": segments}), encoding="utf-8"
+            )
+        elif stage in ("diarizing", "aligning"):
+            pytest.fail("A recording without recognized speech must not load diarization")
+
+    monkeypatch.setattr("autoprotocol.worker.run_stage", run_stage)
+    process_job(config, job)
+    row = jobs.get(config.database_path, "meeting")
+    assert stages == ["normalizing", "transcribing"]
+    assert row["status"] == "failed"
+    assert row["stage"] == "transcribing"
+    assert "Речь не распознана" in row["error"]
+    assert row["result_path"] is None
+
+
+@pytest.mark.parametrize(
+    ("failed_stage", "expected"),
+    [
+        ("normalizing", "Проверьте целостность файла"),
+        ("transcribing", "Проверьте локальную модель STT"),
+        ("diarizing", "Проверьте локальную модель диаризации"),
+        ("aligning", "Не удалось сопоставить текст и голоса"),
+    ],
+)
+def test_stage_failure_has_actionable_error_without_command_details(
+    tmp_path, monkeypatch, failed_stage, expected
+):
+    config = Settings(data_dir=tmp_path, models_dir=tmp_path / "models", _env_file=None)
+    for name in ("faster-whisper-small/model.bin", "pyannote-community-1/config.yaml"):
+        model = config.models_dir / name
+        model.parent.mkdir(parents=True, exist_ok=True)
+        model.touch()
+    initialize(config.database_path)
+    seed(config.database_path)
+    job = jobs.claim(config.database_path)
+    stages = []
+
+    def run_stage(command, config, job):
+        stage = jobs.get(config.database_path, job["id"])["stage"]
+        stages.append(stage)
+        if stage == failed_stage:
+            raise subprocess.CalledProcessError(1, ["sensitive-recording-path"])
+        if stage == "transcribing":
+            Path(command[command.index("--output") + 1]).write_text(
+                json.dumps({"segments": [{"text": "Тестовая реплика"}]}), encoding="utf-8"
+            )
+
+    monkeypatch.setattr("autoprotocol.worker.run_stage", run_stage)
+    process_job(config, job)
+    row = jobs.get(config.database_path, "meeting")
+    assert row["status"] == "failed"
+    assert row["stage"] == failed_stage
+    assert expected in row["error"]
+    assert "sensitive-recording-path" not in row["error"]
+    assert row["result_path"] is None
+    assert stages[-1] == failed_stage

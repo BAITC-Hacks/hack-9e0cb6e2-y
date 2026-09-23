@@ -31,7 +31,7 @@ def run_stage(command, config, job, heartbeat=jobs.heartbeat):
                 next_heartbeat = now + 10
             time.sleep(0.5)
         if process.returncode:
-            raise RuntimeError("Ошибка локального обработчика. Проверьте модели и зависимости.")
+            raise subprocess.CalledProcessError(process.returncode, command)
     finally:
         if process.poll() is None:
             stop(process)
@@ -127,6 +127,19 @@ def process_job(config, job):
             if not jobs.update(config.database_path, job, stage):
                 return
             run_stage(command, config, job)
+            if stage == "transcribing":
+                transcript = json.loads(stt.read_text(encoding="utf-8"))
+                segments = transcript.get("segments") if isinstance(transcript, dict) else None
+                if not isinstance(segments, list) or any(
+                    not isinstance(segment, dict) or not isinstance(segment.get("text"), str)
+                    for segment in segments
+                ):
+                    raise RuntimeError("Не получен корректный транскрипт.")
+                if not any(segment["text"].strip() for segment in segments):
+                    raise RuntimeError(
+                        "Речь не распознана. Проверьте, что в записи слышны голоса, "
+                        "и загрузите другой фрагмент."
+                    )
         parsed = json.loads(result.read_text(encoding="utf-8"))
         if "segments" not in parsed:
             raise RuntimeError("Не получен транскрипт.")
@@ -142,7 +155,20 @@ def process_job(config, job):
             audio=str(audio),
         )
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
-        message = str(error) if isinstance(error, RuntimeError) else "Ошибка обработки записи."
+        stage_errors = {
+            "normalizing": "Не удалось подготовить аудио. Проверьте целостность файла "
+            "и доступность FFmpeg.",
+            "transcribing": "Не удалось распознать речь. Проверьте локальную модель STT "
+            "и свободную память.",
+            "diarizing": "Не удалось разделить голоса. Проверьте локальную модель диаризации "
+            "и свободную память.",
+            "aligning": "Не удалось сопоставить текст и голоса. Попробуйте другой фрагмент записи.",
+        }
+        message = (
+            str(error)
+            if isinstance(error, RuntimeError)
+            else stage_errors.get(stage, "Ошибка обработки записи. Проверьте локальные файлы.")
+        )
         jobs.update(config.database_path, job, stage, status="failed", error=message)
 
 
