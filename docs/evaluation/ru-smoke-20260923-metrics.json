@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "manifest_sha256": "7d6a2569c56a2f77a8b4f6d64b3a6a1f3c5900adbef29aa384c7a56d74f34c6e",
+  "normalization": {
+    "id": "unicode-word-v1",
+    "steps": [
+      "Unicode NFKC; casefold; Russian ё becomes е",
+      "Keep Unicode letters, combining marks and numbers; replace other characters by spaces",
+      "Collapse whitespace; preserve Kazakh letters; no transliteration or number expansion",
+      "WER uses whitespace-separated tokens; CER excludes all whitespace"
+    ],
+    "distance": "exact Levenshtein; insertion/deletion/substitution each cost 1",
+    "aggregation": "micro-average: sum edit distances / sum reference units",
+    "empty_reference": "not_evaluated; null rates, including when hypothesis is also empty",
+    "empty_hypothesis": "valid: every reference unit is a deletion",
+    "rate_units": "ratio, not percent; rates can exceed 1 when insertions exceed reference length"
+  },
+  "scope": "Text accuracy only; synthetic speech is not validation on real meetings",
+  "samples": [
+    {
+      "id": "ru-irina-20260923",
+      "language": "ru",
+      "dataset_kind": "synthetic",
+      "wer": 0.0,
+      "cer": 0.0,
+      "reference": {
+        "path": "../../tests/fixtures/ru_smoke.txt",
+        "format": "text",
+        "sha256": "dd03a7c9912f2c2422e776401af65c57e32636ff147b3c3081e51c0da735755e"
+      },
+      "hypothesis": {
+        "path": "ru-smoke-20260923-hypothesis.json",
+        "format": "segments_json",
+        "sha256": "227a9c87bc2d1bf9f02435b15e23bc87abc3f3a3cf1db3fa7146a5b2b1f58c99",
+        "field": "segments"
+      },
+      "status": "evaluated",
+      "reference_words": 22,
+      "hypothesis_words": 22,
+      "word_errors": 0,
+      "reference_characters": 143,
+      "hypothesis_characters": 143,
+      "character_errors": 0
+    },
+    {
+      "id": "kk-pending",
+      "language": "kk",
+      "dataset_kind": "human_recording",
+      "wer": null,
+      "cer": null,
+      "status": "not_evaluated",
+      "reason": "No manually labelled Kazakh recording available for this acceptance run"
+    },
+    {
+      "id": "mixed-pending",
+      "language": "mixed",
+      "dataset_kind": "human_recording",
+      "wer": null,
+      "cer": null,
+      "status": "not_evaluated",
+      "reason": "No manually labelled code-switching recording available for this acceptance run"
+    }
+  ],
+  "by_language": {
+    "ru": {
+      "status": "evaluated",
+      "samples": 1,
+      "evaluated": 1,
+      "missing": 0,
+      "not_evaluated": 0,
+      "coverage_complete": true,
+      "dataset_kinds_evaluated": [
+        "synthetic"
+      ],
+      "word_errors": 0,
+      "reference_words": 22,
+      "character_errors": 0,
+      "reference_characters": 143,
+      "wer": 0.0,
+      "cer": 0.0
+    },
+    "kk": {
+      "status": "not_evaluated",
+      "samples": 1,
+      "evaluated": 0,
+      "missing": 0,
+      "not_evaluated": 1,
+      "coverage_complete": false,
+      "dataset_kinds_evaluated": [],
+      "word_errors": 0,
+      "reference_words": 0,
+      "character_errors": 0,
+      "reference_characters": 0,
+      "wer": null,
+      "cer": null
+    },
+    "mixed": {
+      "status": "not_evaluated",
+      "samples": 1,
+      "evaluated": 0,
+      "missing": 0,
+      "not_evaluated": 1,
+      "coverage_complete": false,
+      "dataset_kinds_evaluated": [],
+      "word_errors": 0,
+      "reference_words": 0,
+      "character_errors": 0,
+      "reference_characters": 0,
+      "wer": null,
+      "cer": null
+    }
+  },
+  "overall": {
+    "status": "partial",
+    "samples": 3,
+    "evaluated": 1,
+    "missing": 0,
+    "not_evaluated": 2,
+    "coverage_complete": false,
+    "dataset_kinds_evaluated": [
+      "synthetic"
+    ],
+    "word_errors": 0,
+    "reference_words": 22,
+    "character_errors": 0,
+    "reference_characters": 143,
+    "wer": 0.0,
+    "cer": 0.0
+  },
+  "all_languages_evaluated": false
+}

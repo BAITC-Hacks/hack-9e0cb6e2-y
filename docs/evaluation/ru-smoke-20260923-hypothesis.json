@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "evaluation_date": "2026-09-23",
+    "dataset_kind": "synthetic",
+    "audio_generation": "scripts/synthesize_smoke.ps1; Microsoft Irina Desktop; tests/fixtures/ru_smoke.txt",
+    "audio_path_at_run": "data/smoke/ru.wav",
+    "audio_sha256": "2d50136a50490551b0b7eaae78865881085575e232d4a9279a35f255ab5715df",
+    "original_transcript_path_at_run": "data/acceptance/run-20260923-guarded/transcript-original.json",
+    "original_transcript_sha256": "9d194075f3acc3a7f8876fa00a2a4c2cd26a620fd4fb5b0fb99c860ae8484f09",
+    "reference_sha256": "dd03a7c9912f2c2422e776401af65c57e32636ff147b3c3081e51c0da735755e",
+    "hypothesis_selection": "All original aligned segments in file order, before manual edits. No filtering or correction.",
+    "scope": "One synthetic Russian voice. This does not evaluate real meetings, Kazakh, code-switching or speaker attribution."
+  },
+  "segments": [
+    {
+      "id": "aligned_0001",
+      "start_ms": 0,
+      "end_ms": 2780,
+      "text": "Коллеги, начинаем совещание."
+    },
+    {
+      "id": "aligned_0002",
+      "start_ms": 3660,
+      "end_ms": 7400,
+      "text": "Ерлан, подготовь отчет по проекту до пятницы."
+    },
+    {
+      "id": "aligned_0003",
+      "start_ms": 8320,
+      "end_ms": 11720,
+      "text": "Срок поставки оборудования пока не определен."
+    },
+    {
+      "id": "aligned_0004",
+      "start_ms": 12520,
+      "end_ms": 16460,
+      "text": "Следующее совещание проведем на следующей неделе."
+    }
+  ]
+}

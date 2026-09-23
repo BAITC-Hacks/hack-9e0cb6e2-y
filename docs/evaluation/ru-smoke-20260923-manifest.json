@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "description": "Fresh local synthetic RU speech recognition, 2026-09-23. Missing KK/mixed corpus remains explicitly not evaluated.",
+  "provenance": {
+    "evaluation_date": "2026-09-23",
+    "dataset_kind": "synthetic",
+    "audio_generation": "scripts/synthesize_smoke.ps1; Microsoft Irina Desktop; tests/fixtures/ru_smoke.txt",
+    "audio_path_at_run": "data/smoke/ru.wav",
+    "audio_sha256": "2d50136a50490551b0b7eaae78865881085575e232d4a9279a35f255ab5715df",
+    "original_transcript_path_at_run": "data/acceptance/run-20260923-guarded/transcript-original.json",
+    "original_transcript_sha256": "9d194075f3acc3a7f8876fa00a2a4c2cd26a620fd4fb5b0fb99c860ae8484f09",
+    "reference_sha256": "dd03a7c9912f2c2422e776401af65c57e32636ff147b3c3081e51c0da735755e",
+    "hypothesis_selection": "All original aligned segments in file order, before manual edits. No filtering or correction.",
+    "scope": "One synthetic Russian voice. This does not evaluate real meetings, Kazakh, code-switching or speaker attribution."
+  },
+  "samples": [
+    {
+      "id": "ru-irina-20260923",
+      "language": "ru",
+      "dataset_kind": "synthetic",
+      "reference": {
+        "format": "text",
+        "path": "../../tests/fixtures/ru_smoke.txt"
+      },
+      "hypothesis": {
+        "format": "segments_json",
+        "field": "segments",
+        "path": "ru-smoke-20260923-hypothesis.json"
+      }
+    },
+    {
+      "id": "kk-pending",
+      "language": "kk",
+      "dataset_kind": "human_recording",
+      "status": "not_evaluated",
+      "reason": "No manually labelled Kazakh recording available for this acceptance run"
+    },
+    {
+      "id": "mixed-pending",
+      "language": "mixed",
+      "dataset_kind": "human_recording",
+      "status": "not_evaluated",
+      "reason": "No manually labelled code-switching recording available for this acceptance run"
+    }
+  ]
+}

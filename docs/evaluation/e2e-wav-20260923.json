@@ -1,0 +1,91 @@
+{
+  "passed": true,
+  "audio_sha256": "2d50136a50490551b0b7eaae78865881085575e232d4a9279a35f255ab5715df",
+  "checks": {
+    "corrupted_media_rejected": true,
+    "upload_idempotent": true,
+    "fresh_transcript": true,
+    "transcript_review_persisted": true,
+    "real_local_analysis": true,
+    "action_edit_persisted": true,
+    "docx_1_saved_edit": true,
+    "docx_2_saved_edit": true,
+    "stale_export_rejected": true,
+    "silence_clear_failure": true
+  },
+  "durations_seconds": {
+    "audio_pipeline": 59.344,
+    "analysis": 153.078,
+    "silence": 7.219,
+    "total": 221.453
+  },
+  "network": {
+    "os_network_isolation": false,
+    "python_guard_requested": true,
+    "sampling_interval_seconds": 0.5,
+    "external_connections_observed": [],
+    "observed_process_names": [
+      "llama-server.exe",
+      "python.exe",
+      "python3.11.exe"
+    ],
+    "inspection_errors": 0,
+    "note": "Socket sampling cannot prove absence of short-lived native connections.",
+    "python_guard": {
+      "active": true,
+      "guard_versions": [
+        1,
+        2
+      ],
+      "pids": [
+        9464,
+        14468,
+        15612,
+        16856,
+        22008,
+        23464,
+        25364
+      ],
+      "process_count": 7,
+      "counters": {
+        "socket.bind.allowed": 1,
+        "socket.connect.allowed": 9,
+        "socket.getaddrinfo.allowed": 8
+      },
+      "invalid_log_count": 0,
+      "reasons": []
+    },
+    "guard_summary_added_after_run": true
+  },
+  "meeting_id": "666b7c273c5749a1b4b0a12a24619e45",
+  "segments": 4,
+  "analysis_metadata": {
+    "prompt_version": "meeting-evidence-v3-reports",
+    "attempts": 1,
+    "elapsed_seconds": 147.406,
+    "usage": {
+      "completion_tokens": 226,
+      "prompt_tokens": 2165,
+      "total_tokens": 2391,
+      "prompt_tokens_details": {
+        "cached_tokens": 0
+      }
+    },
+    "model": "Qwen3-4B-Q4_K_M",
+    "runtime_build": "b11124",
+    "runtime_profile": "cpu-4threads-no-repack-b256-ub128-c8192",
+    "runtime_peak_rss_mib": 3625.0,
+    "model_load_seconds": 2.562
+  },
+  "process_tree_peak_rss_mib": 3777.9,
+  "provenance": {
+    "date": "2026-09-23",
+    "input_kind": "synthetic_windows_irina_wav",
+    "duration_seconds": 17.3116875,
+    "source_report_sha256": "d3f7ca319b175dcfe4571cbbd9665b013076306a02b540e723084bf9e1a803c4",
+    "base_commit": "21549bad85da7694d83a64f267ce495c77f317af",
+    "working_tree_changes": true,
+    "driver": "scripts/check_end_to_end.py",
+    "os_network_isolation": false
+  }
+}
