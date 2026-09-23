@@ -79,6 +79,10 @@ def claim(database, now=None):
                 "UPDATE jobs SET owner=NULL,lease_until=NULL WHERE meeting_id=?", (row["id"],)
             )
         # Serialize GPU/RAM-heavy jobs even when two workers are accidentally started.
+        if db.execute(
+            "SELECT 1 FROM analyses WHERE status='processing' AND lease_until>?", (now,)
+        ).fetchone():
+            return None
         if db.execute("SELECT 1 FROM meetings WHERE status='processing'").fetchone():
             return None
         row = db.execute("""SELECT m.*,j.attempt FROM meetings m JOIN jobs j ON m.id=j.meeting_id

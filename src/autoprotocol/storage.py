@@ -63,6 +63,15 @@ def initialize(database_path: Path) -> None:
             FOREIGN KEY(meeting_id, source_digest) REFERENCES review_states
         )""")
         connection.execute("INSERT OR IGNORE INTO schema_version(version) VALUES (3)")
+        connection.execute("""CREATE TABLE IF NOT EXISTS analyses (
+            id TEXT PRIMARY KEY, meeting_id TEXT NOT NULL REFERENCES meetings(id),
+            source_digest TEXT NOT NULL, revision INTEGER NOT NULL, input_json TEXT NOT NULL,
+            status TEXT NOT NULL CHECK(status IN ('queued','processing','ready','failed')),
+            created_at REAL NOT NULL, attempt INTEGER NOT NULL DEFAULT 0,
+            owner TEXT, lease_until REAL, error TEXT, result_json TEXT,
+            UNIQUE(meeting_id, source_digest, revision)
+        )""")
+        connection.execute("INSERT OR IGNORE INTO schema_version(version) VALUES (4)")
 
 
 def check_database(database_path: Path) -> None:

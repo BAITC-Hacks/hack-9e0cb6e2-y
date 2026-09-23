@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from autoprotocol import jobs, review
+from autoprotocol import analysis, jobs, review
 from autoprotocol.config import Settings
 from autoprotocol.media import probe
 from autoprotocol.storage import check_database, initialize
@@ -82,6 +82,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/meetings/{meeting_id}/revisions")
     def result_history(meeting_id: str):
         return review.history(config.database_path, meeting_id)
+
+    @app.post("/api/meetings/{meeting_id}/analysis", status_code=202)
+    def start_analysis(meeting_id: str, payload: analysis.AnalysisRequest, request: Request):
+        require_same_origin(request)
+        meeting_or_404(meeting_id)
+        if not config.llm_model.is_file() or not config.llm_server.is_file():
+            raise HTTPException(503, "Подготовьте локальную LLM: scripts/prepare_llm.py.")
+        return {"id": analysis.enqueue(config.database_path, meeting_id, payload)}
+
+    @app.get("/api/meetings/{meeting_id}/analysis")
+    def analysis_status(meeting_id: str):
+        return analysis.latest(config.database_path, meeting_id)
 
     @app.get("/api/meetings/{meeting_id}/audio")
     def meeting_audio(meeting_id: str):
@@ -188,7 +200,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             content={
                 "status": "not_ready",
                 "database": "ok",
-                "reason": "Доступен черновой транскрипт; поручения и экспорт ещё не реализованы",
+                "reason": "Доступны транскрипт и черновой анализ; экспорт ещё не реализован",
             },
         )
 

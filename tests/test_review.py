@@ -297,9 +297,9 @@ def test_v2_upgrade_keeps_ready_meetings_and_isolates_identical_recordings(meeti
     config, path, original = meeting
     with connect(config.database_path) as db:
         # A legacy database has meetings/jobs but no review tables.
-        for table in ("revisions", "segment_edits", "participants", "review_states"):
+        for table in ("analyses", "revisions", "segment_edits", "participants", "review_states"):
             db.execute(f"DROP TABLE {table}")
-        db.execute("DELETE FROM schema_version WHERE version=3")
+        db.execute("DELETE FROM schema_version WHERE version>=3")
         db.execute(
             "UPDATE meetings SET status='ready',result_path=? WHERE id='meeting-b'", (str(path),)
         )
@@ -325,5 +325,5 @@ def test_v2_upgrade_keeps_ready_meetings_and_isolates_identical_recordings(meeti
     with connect(config.database_path) as db:
         assert [
             r[0] for r in db.execute("SELECT version FROM schema_version ORDER BY version")
-        ] == [1, 2, 3]
+        ] == [1, 2, 3, 4]
         assert db.execute("SELECT count(*) FROM jobs").fetchone()[0] == 2

@@ -6,14 +6,14 @@ import subprocess
 import sys
 import time
 
-from autoprotocol import jobs
+from autoprotocol import analysis, jobs
 from autoprotocol.config import Settings
 from autoprotocol.launch import stop
 from autoprotocol.media import FORMATS
 from autoprotocol.storage import initialize
 
 
-def run_stage(command, config, job):
+def run_stage(command, config, job, heartbeat=jobs.heartbeat):
     started = time.monotonic()
     next_heartbeat = started
     # Model output and subprocess exceptions never enter ordinary transcript logs.
@@ -26,7 +26,7 @@ def run_stage(command, config, job):
             if now - started > config.stage_timeout_seconds:
                 raise RuntimeError("Время выполнения этапа превышено.")
             if now >= next_heartbeat:
-                if not jobs.heartbeat(config.database_path, job):
+                if not heartbeat(config.database_path, job):
                     raise RuntimeError("Задание передано другому обработчику.")
                 next_heartbeat = now + 10
             time.sleep(0.5)
@@ -146,6 +146,42 @@ def process_job(config, job):
         jobs.update(config.database_path, job, stage, status="failed", error=message)
 
 
+def process_analysis(config, job):
+    try:
+        work = config.data_dir.resolve() / "analyses" / job["id"] / job["owner"]
+        work.mkdir(parents=True, exist_ok=True)
+        source, output = work / "input.json", work / "result.json"
+        source.write_text(job["input_json"], encoding="utf-8")
+        run_stage(
+            [
+                sys.executable,
+                "-m",
+                "autoprotocol.pipeline.extract",
+                str(source),
+                "--output",
+                str(output),
+                "--model",
+                str(config.llm_model.resolve()),
+                "--server",
+                str(config.llm_server.resolve()),
+            ],
+            config,
+            job,
+            analysis.heartbeat,
+        )
+        result = json.loads(output.read_text(encoding="utf-8"))
+        # The child validates schema/evidence. Only complete output is published.
+        if not all(key in result for key in ("actions", "summary", "metadata")):
+            raise ValueError("Incomplete analysis result")
+        analysis.finish(config.database_path, job, result=result)
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError):
+        analysis.finish(
+            config.database_path,
+            job,
+            error="Анализ не завершён. Проверьте модель, память, длину записи и источники.",
+        )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--once", action="store_true")
@@ -157,6 +193,11 @@ def main():
         if job:
             print(f"Processing {job['id']}", flush=True)
             process_job(config, job)
+        else:
+            job = analysis.claim(config.database_path)
+            if job:
+                print(f"Analyzing {job['id']}", flush=True)
+                process_analysis(config, job)
         if args.once:
             return
         if not job:
