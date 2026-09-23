@@ -8,45 +8,51 @@
        ├─ SQLite: встречи, задания, результаты, ручные версии
        └─ data/: оригиналы, нормализованное аудио, экспорт
               ↑
-       отдельный Python worker (план)
-         FFmpeg → STT → диаризация → LLM → валидация
+       отдельный Python worker
+         FFmpeg → STT → диаризация → объединение
+         LLM и поручения — следующий этап
               ↑
        models/: локальные веса; сеть при обработке отключена
 ```
 
-Сейчас существуют web-процесс, конфигурация, SQLite schema_version и диагностика.
-Таблицы предметной области, worker, ML и экспорт ещё не реализованы.
+Работают web-процесс, SQLite meetings/jobs, worker, локальные STT/диаризация
+и объединение транскрипта. Поручения, ручные версии и экспорт пока не реализованы.
+[Актуальные контракты и ограничения](PHASE_2_REPORT.md).
 
 ## Структура
 
-- `src/autoprotocol/main.py` — factory приложения, стартовая страница, health.
+- `src/autoprotocol/main.py` — factory, HTTP-загрузка, встречи, результат, аудио и health.
 - `config.py` — типизированная конфигурация из окружения/.env.
 - `storage.py` — SQLite bootstrap, транзакции, WAL и foreign keys.
 - `diagnostics.py` — проверка окружения без внешних запросов.
+- `jobs.py` — очередь и lease; `worker.py` — отдельная обработка этапов.
+- `launch.py` — совместный запуск и остановка web + worker; `media.py` — ffprobe.
 - `web/` — локальные шаблоны и статика.
-- `pipeline/` — место будущих адаптеров.
+- `pipeline/` — STT, диаризация и объединение результатов.
 - `tests/` — проверки инфраструктуры; `scripts/` — установка и запуск Windows.
 - `data/`, `models/` — локальные данные, исключённые из git.
 - `docs/` — решения, фазы, модельные зависимости.
 
-## Будущие контракты API
+## Контракты API
 
 | Метод и путь | Назначение |
 |---|---|
-| POST /api/meetings | Multipart файл, согласие, название, дата, timezone; ответ 202 + id |
+| POST /api/meetings | Байты файла application/octet-stream; метаданные в query; ответ 202 + id |
+| GET /api/meetings | Последние 100 встреч |
 | GET /api/meetings/{id} | Статус queued/processing/ready/failed, stage, безопасная ошибка |
-| GET /api/meetings/{id}/result | Сегменты, участники, поручения, саммари, revision |
-| PATCH /api/meetings/{id}/result | Проверенные изменения с expected_revision; 409 при конфликте |
+| GET /api/meetings/{id}/result | Объединённые сегменты, слова, источники, review_flags |
+| PATCH /api/meetings/{id}/result | План: изменения с expected_revision; пока отсутствует |
 | GET /api/meetings/{id}/audio | Аудио с Range для проигрывания источников |
-| POST /api/meetings/{id}/exports | Снимок конкретной сохранённой revision в DOCX |
+| POST /api/meetings/{id}/exports | План: снимок сохранённой revision в DOCX; пока отсутствует |
 
-Эти endpoints пока отсутствуют. Доступные маршруты: `/`, `/static/*`,
-`/openapi.json`, `/health/live` (200), `/health/ready` (503 до реализации конвейера).
+Также доступны `/`, `/static/*`, `/openapi.json`, `/health/live` (200),
+`/health/ready` (503 до реализации полного протокола с поручениями/экспортом).
 Liveness означает только готовность web-сервера.
 
 ## Данные и очередь (фаза 2)
 
-Meeting хранит дату nullable, IANA timezone, status и stage.
+Meeting хранит дату nullable, IANA timezone, status и stage; сегменты пока хранятся в JSON.
+Следующие сущности планируются для редактора и извлечения поручений:
 Participant привязан к встрече; связь speaker_id с именем содержит основание и подтверждение.
 Segment хранит глобальные миллисекунды, текст, язык nullable и review_flags.
 ActionItem хранит отдельно task, assignee_id/text, due_text, due_date,
@@ -56,7 +62,7 @@ SummaryItem содержит тип и текст. Связи evidence с Segmen
 Revision хранит исходное/новое значение, источник правки и время. Автоматический
 вывод и ручная версия разделены; экспорт фиксирует номер версии.
 
-Job содержит meeting_id, attempt, lease_until, heartbeat и stage. Захват через
+Job содержит meeting_id, attempt, owner, lease_until и heartbeat; stage хранится в Meeting. Захват через
 короткую транзакцию BEGIN IMMEDIATE; inference идёт вне транзакции. Один worker,
 одна модель в памяти за раз. Упавший процесс освобождается по истечении lease;
 повторы ограничены, результаты этапов записываются атомарно и идемпотентно.
