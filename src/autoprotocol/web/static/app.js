@@ -21,6 +21,9 @@ let dirty = false;
 let saving = false;
 const reviewForm = document.querySelector('#review-form');
 const reviewMessage = document.querySelector('#review-message');
+let analysisKey = null;
+let analyzing = false;
+let analysisPending = false;
 
 async function api(url, options) {
   const response = await fetch(url, options);
@@ -84,6 +87,12 @@ window.addEventListener('hashchange', () => {
   selected = target;
   rendered = null;
   currentResult = null;
+  analysisKey = null;
+  analyzing = false;
+  analysisPending = false;
+  document.querySelector('#analysis-result').replaceChildren();
+  document.querySelector('#analysis-message').textContent = '';
+  document.querySelector('#analysis-request-error').textContent = '';
   dirty = false;
   document.querySelector('#meeting-result').hidden = true;
   document.querySelector('#revision-history').open = false;
@@ -100,6 +109,7 @@ function updateSaveButtons() {
   for (const button of document.querySelectorAll('.save-review')) button.disabled = !dirty || saving;
   document.querySelector('#review-fields').disabled = saving;
   document.querySelector('#reload-review').disabled = saving;
+  document.querySelector('#analyze-meeting').disabled = dirty || saving || analyzing || analysisPending;
 }
 
 function checkbox(text, checked, className) {
@@ -281,6 +291,89 @@ document.querySelector('#revision-history').addEventListener('toggle', event => 
   if (event.target.open) loadHistory();
 });
 
+document.querySelector('#analyze-meeting').addEventListener('click', async () => {
+  if (!currentResult || dirty || saving || analyzing || analysisPending) return;
+  const id = selected;
+  analysisPending = true;
+  document.querySelector('#analysis-request-error').textContent = '';
+  updateSaveButtons();
+  try {
+    await api(`/api/meetings/${encodeURIComponent(id)}/analysis`, {method: 'POST',
+      headers: {'Content-Type': 'application/json'}, body: JSON.stringify({
+        expected_revision: currentResult.review.revision, source_digest: currentResult.review.source_digest
+      })});
+    if (selected === id) await refreshAnalysis(id);
+  } catch (error) {
+    if (selected === id) document.querySelector('#analysis-request-error').textContent = error.message;
+  } finally { if (selected === id) { analysisPending = false; updateSaveButtons(); } }
+});
+
+async function refreshAnalysis(id) {
+  const data = await api(`/api/meetings/${encodeURIComponent(id)}/analysis`);
+  if (selected !== id) return;
+  analyzing = ['queued', 'processing'].includes(data.status);
+  updateSaveButtons();
+  const labels = {not_started: 'Анализ ещё не запускался.', queued: 'Анализ в очереди.',
+    processing: 'Модель анализирует запись… Это может занять несколько минут.',
+    ready: 'Черновик готов. Проверьте поручения и итоги по источникам.', failed: data.error};
+  // Warn also when this tab still displays an older saved transcript revision.
+  const visibleMismatch = data.result && (data.source_digest !== currentResult?.review.source_digest ||
+    data.revision !== currentResult?.review.revision);
+  const stale = data.stale || visibleMismatch;
+  document.querySelector('#analysis-message').textContent = (stale
+    ? 'Версия анализа отличается от транскрипта. Загрузите сохранённый транскрипт и запустите анализ заново. ' : '') +
+    (dirty ? 'Есть несохранённые правки; этот анализ относится к сохранённому тексту. ' : '') + labels[data.status];
+  const key = JSON.stringify([id, data.id, data.status, stale]);
+  if (analysisKey === key) return;
+  analysisKey = key;
+  const panel = document.querySelector('#analysis-result');
+  panel.replaceChildren();
+  panel.className = stale ? 'stale-analysis' : '';
+  if (!data.result) return;
+  function sources(item) {
+    const details = node('details');
+    details.append(node('summary', 'Источники в записи'));
+    for (const source of item.evidence) {
+      const seek = node('button', `${timecode(source.start_ms)} · ${source.speaker_id || 'Говорящий неизвестен'}`);
+      seek.addEventListener('click', () => {
+        const audio = document.querySelector('#meeting-audio');
+        audio.currentTime = source.start_ms / 1000;
+        audio.play().catch(() => { document.querySelector('#analysis-message').textContent = 'Нажмите воспроизведение в плеере.'; });
+        const card = [...document.querySelectorAll('.transcript-segment')].find(el => el.dataset.segmentId === source.segment_id);
+        // Old segment IDs may have been reassigned after reprocessing.
+        if (!stale && card) card.scrollIntoView({block: 'center', behavior: 'smooth'});
+      });
+      details.append(seek, node('p', source.quote, 'original-text'));
+    }
+    return details;
+  }
+  const statuses = {agreed: 'Поручено / согласовано', proposed: 'Предложено', changed: 'Изменено', cancelled: 'Отменено'};
+  panel.append(node('h4', 'Поручения'));
+  if (!data.result.actions.length) panel.append(node('p', 'Модель не выделила поручений. Проверьте запись: это не гарантия их отсутствия.'));
+  for (const action of data.result.actions) {
+    const card = node('article', undefined, 'action-card');
+    const due = action.due_normalized;
+    const normalized = due.date || (due.interval_start ? `${due.interval_start} — ${due.interval_end}` : '');
+    card.append(node('h4', action.task), node('p', `Ответственный: ${action.assignee_text || 'Требует уточнения'}`),
+      node('p', `Срок: ${action.due_text || 'Не указан'}${normalized ? ` (${normalized})` : ''}`),
+      node('p', `${statuses[action.status]} · Требует проверки`), sources(action));
+    panel.append(card);
+  }
+  panel.append(node('h4', 'Краткие итоги'));
+  const kinds = {fact: 'Факты', decision: 'Решения', action: 'Поручения', question: 'Открытые вопросы'};
+  for (const [kind, title] of Object.entries(kinds)) {
+    const items = data.result.summary.filter(item => item.kind === kind);
+    if (!items.length) continue;
+    panel.append(node('h4', title));
+    for (const item of items) {
+      const card = node('article', undefined, 'action-card');
+      card.append(node('p', item.text), sources(item));
+      panel.append(card);
+    }
+  }
+  if (!data.result.summary.length) panel.append(node('p', 'Модель не выделила содержательных итогов.'));
+}
+
 async function refresh() {
   if (refreshing) return;
   refreshing = true;
@@ -305,10 +398,12 @@ async function refresh() {
       ? `${meeting.error} Этап: ${stages[meeting.stage] || meeting.stage}.`
       : (stages[meeting.stage] || meeting.stage);
     if (rendered !== id) document.querySelector('#meeting-result').hidden = true;
-    if (meeting.status !== 'ready' || rendered === id) return;
+    if (meeting.status !== 'ready') return;
+    if (rendered === id) { await refreshAnalysis(id); return; }
     const result = await api(`/api/meetings/${encodeURIComponent(id)}/result`);
     if (selected !== id) return;
     renderResult(result, id);
+    await refreshAnalysis(id);
   } catch (error) { document.querySelector('#list-message').textContent = error.message; }
   finally { refreshing = false; }
 }

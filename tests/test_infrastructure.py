@@ -14,7 +14,7 @@ def test_app_reports_unimplemented_pipeline_and_serves_local_assets(tmp_path):
         assert readiness.json()["database"] == "ok"
         page = client.get("/")
         assert page.status_code == 200
-        assert "пока недоступны" in page.text
+        assert "Экспорт пока недоступен" in page.text
         assert client.get("/static/app.css").status_code == 200
         assert client.get("/docs").status_code == 404
 

@@ -373,6 +373,10 @@ details { margin: 14px 0; }
 summary { cursor: pointer; font-weight: 600; }
 .original-text, .history-change { white-space: pre-wrap; line-height: 1.6; }
 .history-entry { border-top: 1px solid var(--glass-border); padding: 12px 0; }
+.analysis-panel { border-top: 1px solid var(--glass-border); padding: 16px 0; }
+.action-card { padding: 16px; border: 1px solid var(--glass-border); border-radius: 12px; margin: 12px 0; }
+.evidence-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.stale-analysis { border-left: 4px solid var(--violet-deep); padding-left: 14px; }
 @media (max-width: 560px) {
   .form-grid { grid-template-columns: 1fr; }
   .status-card { padding: 20px; }

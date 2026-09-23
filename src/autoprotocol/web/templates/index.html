@@ -46,7 +46,7 @@
       </div>
       <div class="status-body">
         <h2 id="status">Загрузить запись</h2>
-        <p>Получите черновой транскрипт с говорящими. Поручения и экспорт пока недоступны.</p>
+        <p>Получите транскрипт с говорящими и запустите анализ поручений. Экспорт пока недоступен.</p>
         <p>Русская речь проверена на тестовой записи; качество қазақша и mixed ещё проверяется.</p>
         <form id="upload-form" data-max-bytes="{{ max_upload_mb * 1024 * 1024 }}">
           <label>Название встречи<input name="title" required maxlength="200" placeholder="Рабочее совещание"></label>
@@ -78,6 +78,14 @@
         <p>Прослушайте запись, укажите имена и проверьте спорные реплики. Исправления сохраняются кнопкой ниже.</p>
         <audio id="meeting-audio" controls preload="metadata"></audio>
         <p id="result-summary"></p>
+        <section aria-labelledby="analysis-heading" class="analysis-panel">
+          <h3 id="analysis-heading">Поручения и итоги</h3>
+          <p>Сначала сохраните исправления транскрипта. Анализ выполняется локально и требует проверки человеком.</p>
+          <button type="button" id="analyze-meeting">Составить поручения и саммари</button>
+          <p id="analysis-request-error" role="alert"></p>
+          <p id="analysis-message" role="status" aria-live="polite"></p>
+          <div id="analysis-result"></div>
+        </section>
         <p id="source-review-notice" class="review-note" hidden></p>
         <form id="review-form">
           <div class="review-toolbar">
