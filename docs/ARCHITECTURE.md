@@ -16,7 +16,7 @@
 ```
 
 Работают web-процесс, SQLite meetings/jobs, worker, локальные STT/диаризация
-и объединение транскрипта. Поручения, ручные версии и экспорт пока не реализованы.
+и объединение транскрипта, редактор имён/реплик с историей. Поручения и экспорт пока не реализованы.
 [Актуальные контракты и ограничения](PHASE_2_REPORT.md).
 
 ## Структура
@@ -24,6 +24,7 @@
 - `src/autoprotocol/main.py` — factory, HTTP-загрузка, встречи, результат, аудио и health.
 - `config.py` — типизированная конфигурация из окружения/.env.
 - `storage.py` — SQLite bootstrap, транзакции, WAL и foreign keys.
+- `review.py` — ручные правки, подтверждённые имена, история и контроль версий.
 - `diagnostics.py` — проверка окружения без внешних запросов.
 - `jobs.py` — очередь и lease; `worker.py` — отдельная обработка этапов.
 - `launch.py` — совместный запуск и остановка web + worker; `media.py` — ffprobe.
@@ -40,8 +41,9 @@
 | POST /api/meetings | Байты файла application/octet-stream; метаданные в query; ответ 202 + id |
 | GET /api/meetings | Последние 100 встреч |
 | GET /api/meetings/{id} | Статус queued/processing/ready/failed, stage, безопасная ошибка |
-| GET /api/meetings/{id}/result | Объединённые сегменты, слова, источники, review_flags |
-| PATCH /api/meetings/{id}/result | План: изменения с expected_revision; пока отсутствует |
+| GET /api/meetings/{id}/result | Текущая ручная версия; `?original=true` возвращает исходный JSON |
+| PATCH /api/meetings/{id}/result | Правки с expected_revision и source_digest; конфликт — 409 |
+| GET /api/meetings/{id}/revisions | Последние 100 сохранений с old/new и временем |
 | GET /api/meetings/{id}/audio | Аудио с Range для проигрывания источников |
 | POST /api/meetings/{id}/exports | План: снимок сохранённой revision в DOCX; пока отсутствует |
 
@@ -52,15 +54,17 @@ Liveness означает только готовность web-сервера.
 ## Данные и очередь (фаза 2)
 
 Meeting хранит дату nullable, IANA timezone, status и stage; сегменты пока хранятся в JSON.
-Следующие сущности планируются для редактора и извлечения поручений:
-Participant привязан к встрече; связь speaker_id с именем содержит основание и подтверждение.
-Segment хранит глобальные миллисекунды, текст, язык nullable и review_flags.
+Миграция v3 добавляет review_states (снимок исходного JSON, SHA-256 и номер версии),
+participants (подтверждённые вручную имена голосов), segment_edits и revisions.
+Сущности привязаны к встрече и конкретному результату модели; исходные слова,
+таймкоды и флаги остаются в JSON. Подробнее — [ручная проверка](MANUAL_REVIEW.md).
+Следующие сущности пока планируются для извлечения поручений:
 ActionItem хранит отдельно task, assignee_id/text, due_text, due_date,
 due_interval, due_condition и собственный статус поручения.
 SummaryItem содержит тип и текст. Связи evidence с Segment — отдельные таблицы
 с внешними ключами и проверкой принадлежности той же встрече.
-Revision хранит исходное/новое значение, источник правки и время. Автоматический
-вывод и ручная версия разделены; экспорт фиксирует номер версии.
+Revision уже хранит исходное/новое значение, источник правки и время. Автоматический
+вывод и ручная версия разделены; будущий экспорт должен фиксировать номер версии.
 
 Job содержит meeting_id, attempt, owner, lease_until и heartbeat; stage хранится в Meeting. Захват через
 короткую транзакцию BEGIN IMMEDIATE; inference идёт вне транзакции. Один worker,
