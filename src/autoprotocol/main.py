@@ -1,6 +1,5 @@
 import asyncio
 import hashlib
-import json
 import sqlite3
 import time
 import uuid
@@ -15,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from autoprotocol import jobs
+from autoprotocol import jobs, review
 from autoprotocol.config import Settings
 from autoprotocol.media import probe
 from autoprotocol.storage import check_database, initialize
@@ -36,6 +35,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["localhost", "127.0.0.1", "[::1]"])
     app.mount("/static", StaticFiles(directory=ASSETS / "static"), name="static")
     templates = Jinja2Templates(directory=ASSETS / "templates")
+
+    @app.exception_handler(review.ReviewError)
+    async def review_error(request: Request, error: review.ReviewError):
+        return JSONResponse(status_code=error.status, content={"detail": str(error)})
+
+    def require_same_origin(request: Request):
+        origin = request.headers.get("origin")
+        if origin and origin != str(request.base_url).rstrip("/"):
+            raise HTTPException(403, "Изменения разрешены только со страницы приложения.")
 
     @app.get("/", response_class=HTMLResponse)
     def index(request: Request):
@@ -63,11 +71,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return jobs.public(meeting_or_404(meeting_id))
 
     @app.get("/api/meetings/{meeting_id}/result")
-    def meeting_result(meeting_id: str):
-        row = meeting_or_404(meeting_id)
-        if row["status"] != "ready":
-            raise HTTPException(409, "Результат ещё не готов.")
-        return json.loads(Path(row["result_path"]).read_text(encoding="utf-8"))
+    def meeting_result(meeting_id: str, original: bool = False):
+        return review.get_result(config.database_path, meeting_id, original=original)
+
+    @app.patch("/api/meetings/{meeting_id}/result")
+    def edit_result(meeting_id: str, patch: review.ReviewPatch, request: Request):
+        require_same_origin(request)
+        return review.save(config.database_path, meeting_id, patch)
+
+    @app.get("/api/meetings/{meeting_id}/revisions")
+    def result_history(meeting_id: str):
+        return review.history(config.database_path, meeting_id)
 
     @app.get("/api/meetings/{meeting_id}/audio")
     def meeting_audio(meeting_id: str):
@@ -94,9 +108,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             ZoneInfo(timezone)
         except (ZoneInfoNotFoundError, ValueError):
             raise HTTPException(422, "Неизвестный часовой пояс.") from None
-        origin = request.headers.get("origin")
-        if origin and origin != str(request.base_url).rstrip("/"):
-            raise HTTPException(403, "Загрузка разрешена только со страницы приложения.")
+        require_same_origin(request)
         if request.headers.get("content-type", "").split(";")[0] != "application/octet-stream":
             raise HTTPException(415, "Отправьте содержимое файла как application/octet-stream.")
         key = str(idempotency_key or uuid.uuid4())

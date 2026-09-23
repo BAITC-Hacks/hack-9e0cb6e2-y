@@ -39,6 +39,30 @@ def initialize(database_path: Path) -> None:
             lease_until REAL, heartbeat REAL
         )""")
         connection.execute("INSERT OR IGNORE INTO schema_version(version) VALUES (2)")
+        connection.execute("""CREATE TABLE IF NOT EXISTS review_states (
+            meeting_id TEXT NOT NULL REFERENCES meetings(id), source_digest TEXT NOT NULL,
+            source_json TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 0,
+            PRIMARY KEY(meeting_id, source_digest)
+        )""")
+        connection.execute("""CREATE TABLE IF NOT EXISTS participants (
+            meeting_id TEXT NOT NULL, source_digest TEXT NOT NULL, speaker_id TEXT NOT NULL,
+            display_name TEXT NOT NULL,
+            PRIMARY KEY(meeting_id, source_digest, speaker_id),
+            FOREIGN KEY(meeting_id, source_digest) REFERENCES review_states
+        )""")
+        connection.execute("""CREATE TABLE IF NOT EXISTS segment_edits (
+            meeting_id TEXT NOT NULL, source_digest TEXT NOT NULL, segment_id TEXT NOT NULL,
+            text TEXT NOT NULL, speaker_id TEXT, reviewed INTEGER NOT NULL,
+            PRIMARY KEY(meeting_id, source_digest, segment_id),
+            FOREIGN KEY(meeting_id, source_digest) REFERENCES review_states
+        )""")
+        connection.execute("""CREATE TABLE IF NOT EXISTS revisions (
+            meeting_id TEXT NOT NULL, source_digest TEXT NOT NULL, revision INTEGER NOT NULL,
+            changed_at TEXT NOT NULL, changes_json TEXT NOT NULL,
+            PRIMARY KEY(meeting_id, source_digest, revision),
+            FOREIGN KEY(meeting_id, source_digest) REFERENCES review_states
+        )""")
+        connection.execute("INSERT OR IGNORE INTO schema_version(version) VALUES (3)")
 
 
 def check_database(database_path: Path) -> None:

@@ -28,4 +28,4 @@ def test_database_initialization_preserves_existing_data(tmp_path):
     initialize(path)
     with connect(path) as db:
         assert db.execute("SELECT value FROM sentinel").fetchone()[0] == "сохранено"
-        assert db.execute("SELECT count(*) FROM schema_version").fetchone()[0] == 2
+        assert db.execute("SELECT count(*) FROM schema_version").fetchone()[0] == 3
