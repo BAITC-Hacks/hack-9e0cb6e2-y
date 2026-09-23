@@ -1,0 +1,311 @@
+[
+  {
+    "case": "deadline_changed",
+    "passed": true,
+    "checks": {
+      "action_count": true,
+      "assignee": true,
+      "deadline": true,
+      "sources": true
+    },
+    "result": {
+      "actions": [
+        {
+          "task": "подготовить отчёт",
+          "assignee_text": "Ерлан",
+          "due_text": "2026-10-15",
+          "due_kind": "date",
+          "status": "agreed",
+          "issuer_segment_id": "s3",
+          "evidence": [
+            {
+              "segment_id": "s1",
+              "quote": "Ерлан, подготовь отчёт до 2026-10-01.",
+              "role": "initial",
+              "start_ms": 0,
+              "end_ms": 3000,
+              "speaker_id": "SPEAKER_00"
+            },
+            {
+              "segment_id": "s2",
+              "quote": "Предлагаю перенести срок отчёта на 2026-10-15.",
+              "role": "update",
+              "start_ms": 3000,
+              "end_ms": 5000,
+              "speaker_id": "SPEAKER_01"
+            },
+            {
+              "segment_id": "s3",
+              "quote": "Согласовано. Ерлан готовит отчёт к 2026-10-15 вместо прежнего срока.",
+              "role": "confirmation",
+              "start_ms": 5000,
+              "end_ms": 8000,
+              "speaker_id": "SPEAKER_00"
+            }
+          ],
+          "requires_review": true,
+          "issuer_speaker_id": "SPEAKER_00",
+          "due_normalized": {
+            "date": "2026-10-15",
+            "interval_start": null,
+            "interval_end": null
+          },
+          "review_flags": [
+            "model_output_unverified"
+          ],
+          "id": "action_0001"
+        }
+      ],
+      "summary": [
+        {
+          "kind": "action",
+          "text": "Срок отчёта перенесён на 2026-10-15",
+          "evidence": [
+            {
+              "segment_id": "s2",
+              "quote": "Предлагаю перенести срок отчёта на 2026-10-15.",
+              "role": "update",
+              "start_ms": 3000,
+              "end_ms": 5000,
+              "speaker_id": "SPEAKER_01"
+            },
+            {
+              "segment_id": "s3",
+              "quote": "Согласовано. Ерлан готовит отчёт к 2026-10-15 вместо прежнего срока.",
+              "role": "confirmation",
+              "start_ms": 5000,
+              "end_ms": 8000,
+              "speaker_id": "SPEAKER_00"
+            }
+          ],
+          "requires_review": true
+        }
+      ],
+      "reports": [],
+      "metadata": {
+        "prompt_version": "meeting-evidence-v3-reports",
+        "attempts": 1,
+        "elapsed_seconds": 188.172,
+        "usage": {
+          "completion_tokens": 408,
+          "prompt_tokens": 2092,
+          "total_tokens": 2500,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "model": "Qwen3-4B-Q4_K_M",
+        "runtime_build": "b11124",
+        "runtime_profile": "cpu-4threads-no-repack-b256-ub128-c8192",
+        "runtime_peak_rss_mib": 3625.3,
+        "model_load_seconds": 2.531
+      }
+    }
+  },
+  {
+    "case": "no_actions_and_injection",
+    "passed": true,
+    "checks": {
+      "action_count": true
+    },
+    "result": {
+      "actions": [],
+      "summary": [],
+      "reports": [],
+      "metadata": {
+        "prompt_version": "meeting-evidence-v3-reports",
+        "attempts": 1,
+        "elapsed_seconds": 18.297,
+        "usage": {
+          "completion_tokens": 18,
+          "prompt_tokens": 2037,
+          "total_tokens": 2055,
+          "prompt_tokens_details": {
+            "cached_tokens": 1833
+          }
+        },
+        "model": "Qwen3-4B-Q4_K_M",
+        "runtime_build": "b11124",
+        "runtime_profile": "cpu-4threads-no-repack-b256-ub128-c8192",
+        "runtime_peak_rss_mib": 3626.6,
+        "model_load_seconds": 2.531
+      }
+    }
+  },
+  {
+    "case": "no_deadline",
+    "passed": true,
+    "checks": {
+      "action_count": true,
+      "assignee": true,
+      "deadline": true
+    },
+    "result": {
+      "actions": [
+        {
+          "task": "проверить отчёт",
+          "assignee_text": "Ерлан",
+          "due_text": null,
+          "due_kind": "unspecified",
+          "status": "agreed",
+          "issuer_segment_id": "s1",
+          "evidence": [
+            {
+              "segment_id": "s1",
+              "quote": "Ерлан, проверь отчёт. Срок пока не назначен.",
+              "role": "initial",
+              "start_ms": 0,
+              "end_ms": 4000,
+              "speaker_id": "SPEAKER_00"
+            }
+          ],
+          "requires_review": true,
+          "issuer_speaker_id": "SPEAKER_00",
+          "due_normalized": {
+            "date": null,
+            "interval_start": null,
+            "interval_end": null
+          },
+          "review_flags": [
+            "model_output_unverified"
+          ],
+          "id": "action_0001"
+        }
+      ],
+      "summary": [
+        {
+          "kind": "action",
+          "text": "Ерлан, проверь отчёт.",
+          "evidence": [
+            {
+              "segment_id": "s1",
+              "quote": "Ерлан, проверь отчёт. Срок пока не назначен.",
+              "role": "initial",
+              "start_ms": 0,
+              "end_ms": 4000,
+              "speaker_id": "SPEAKER_00"
+            }
+          ],
+          "requires_review": true
+        }
+      ],
+      "reports": [],
+      "metadata": {
+        "prompt_version": "meeting-evidence-v3-reports",
+        "attempts": 1,
+        "elapsed_seconds": 124.484,
+        "usage": {
+          "completion_tokens": 208,
+          "prompt_tokens": 1989,
+          "total_tokens": 2197,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "model": "Qwen3-4B-Q4_K_M",
+        "runtime_build": "b11124",
+        "runtime_profile": "cpu-4threads-no-repack-b256-ub128-c8192",
+        "runtime_peak_rss_mib": 3627.4,
+        "model_load_seconds": 2.531
+      }
+    }
+  },
+  {
+    "case": "reports_with_metrics",
+    "passed": true,
+    "checks": {
+      "action_count": true,
+      "report_count": true,
+      "indicator": true,
+      "problem": true,
+      "unknown_indicator": true
+    },
+    "result": {
+      "actions": [],
+      "summary": [
+        {
+          "kind": "fact",
+          "text": "Доклад по производству. Выпуск составил 94% от плана. Проблема: поставщик задержал сырьё.",
+          "evidence": [
+            {
+              "segment_id": "seg_1",
+              "quote": "Доклад по производству. Выпуск составил 94% от плана. Проблема: поставщик задержал сырьё.",
+              "role": "initial",
+              "start_ms": 0,
+              "end_ms": 4000,
+              "speaker_id": "SPEAKER_00"
+            }
+          ],
+          "requires_review": true
+        },
+        {
+          "kind": "fact",
+          "text": "По обучению показатель пока не назван. Проблема: у 12% сотрудников просрочены сертификаты.",
+          "evidence": [
+            {
+              "segment_id": "seg_2",
+              "quote": "По обучению показатель пока не назван. Проблема: у 12% сотрудников просрочены сертификаты.",
+              "role": "initial",
+              "start_ms": 4000,
+              "end_ms": 7000,
+              "speaker_id": "SPEAKER_01"
+            }
+          ],
+          "requires_review": true
+        }
+      ],
+      "reports": [
+        {
+          "direction": "Производство",
+          "indicator": "Выпуск составил 94% от плана",
+          "problem": "поставщик задержал сырьё",
+          "evidence": [
+            {
+              "segment_id": "seg_1",
+              "quote": "Доклад по производству. Выпуск составил 94% от плана. Проблема: поставщик задержал сырьё.",
+              "role": "initial",
+              "start_ms": 0,
+              "end_ms": 4000,
+              "speaker_id": "SPEAKER_00"
+            }
+          ],
+          "requires_review": true
+        },
+        {
+          "direction": "Обучение",
+          "indicator": null,
+          "problem": "у 12% сотрудников просрочены сертификаты",
+          "evidence": [
+            {
+              "segment_id": "seg_2",
+              "quote": "По обучению показатель пока не назван. Проблема: у 12% сотрудников просрочены сертификаты.",
+              "role": "initial",
+              "start_ms": 4000,
+              "end_ms": 7000,
+              "speaker_id": "SPEAKER_01"
+            }
+          ],
+          "requires_review": true
+        }
+      ],
+      "metadata": {
+        "prompt_version": "meeting-evidence-v3-reports",
+        "attempts": 1,
+        "elapsed_seconds": 186.672,
+        "usage": {
+          "completion_tokens": 487,
+          "prompt_tokens": 2029,
+          "total_tokens": 2516,
+          "prompt_tokens_details": {
+            "cached_tokens": 0
+          }
+        },
+        "model": "Qwen3-4B-Q4_K_M",
+        "runtime_build": "b11124",
+        "runtime_profile": "cpu-4threads-no-repack-b256-ub128-c8192",
+        "runtime_peak_rss_mib": 3625.6,
+        "model_load_seconds": 2.062
+      }
+    }
+  }
+]
