@@ -1,9 +1,12 @@
-"""Online preparation of pinned public weights and a Windows CPU llama.cpp build."""
+"""Online preparation of pinned public weights and a CPU llama.cpp build for this OS."""
 
 import argparse
 import hashlib
 import json
+import platform
 import shutil
+import sys
+import tarfile
 import urllib.request
 import zipfile
 from datetime import UTC, datetime
@@ -15,8 +18,43 @@ REVISION = "bc640142c66e1fdd12af0bd68f40445458f3869b"
 FILENAME = "Qwen3-4B-Q4_K_M.gguf"
 MODEL_SHA = "7485fe6f11af29433bc51cab58009521f205840f5b4ae3a32fa7f92e8534fdf5"
 BUILD = "b11124"
-ARCHIVE = f"llama-{BUILD}-bin-win-cpu-x64.zip"
-ARCHIVE_SHA = "7eb4e7475f1730e0845e079e41f2e79b0c6de71d86731f755197129620a5bd28"
+# Official CPU builds of the same release; SHA-256 from the GitHub release metadata.
+ARCHIVES = {
+    ("win32", "x64"): (
+        "win-cpu-x64.zip",
+        "7eb4e7475f1730e0845e079e41f2e79b0c6de71d86731f755197129620a5bd28",
+    ),
+    ("win32", "arm64"): (
+        "win-cpu-arm64.zip",
+        "120f055384dd090094699ed5f4a6636755dbfc04bb1199ea7a0d9bc8f2a5ad6f",
+    ),
+    ("linux", "x64"): (
+        "ubuntu-x64.tar.gz",
+        "104ec3bf8d2e355c0bb13bb08a8d2593f2365e42d843d09426a3fdab8c668d74",
+    ),
+    ("linux", "arm64"): (
+        "ubuntu-arm64.tar.gz",
+        "88ebc7ed72618855688296228a1af2998e8249601a04bd62bae93c654c199f28",
+    ),
+    ("darwin", "arm64"): (
+        "macos-arm64.tar.gz",
+        "fc8665397c647b04eacf62b01a262e15f7da407a796e7809e8c9d2efbdbb4124",
+    ),
+    ("darwin", "x64"): (
+        "macos-x64.tar.gz",
+        "ad9112aa0f425926943834345fde852106b6ae7befed7e6e85a5387be1dea0fd",
+    ),
+}
+
+
+def runtime_archive():
+    machine = platform.machine().lower()
+    arch = {"amd64": "x64", "x86_64": "x64", "arm64": "arm64", "aarch64": "arm64"}.get(machine)
+    system = "linux" if sys.platform.startswith("linux") else sys.platform
+    if (system, arch) not in ARCHIVES:
+        raise SystemExit(f"No pinned llama.cpp build for {sys.platform}/{machine}")
+    suffix, checksum = ARCHIVES[(system, arch)]
+    return f"llama-{BUILD}-bin-{suffix}", checksum
 
 
 def digest(path):
@@ -53,19 +91,28 @@ def main():
         *([urllib.request.ProxyHandler({})] if args.direct else [])
     )
     runtime = ROOT / "models" / f"llama-{BUILD}"
-    archive = runtime / ARCHIVE
+    name, checksum = runtime_archive()
+    archive = runtime / name
     download(
         opener,
-        f"https://github.com/ggml-org/llama.cpp/releases/download/{BUILD}/{ARCHIVE}",
+        f"https://github.com/ggml-org/llama.cpp/releases/download/{BUILD}/{name}",
         archive,
-        ARCHIVE_SHA,
+        checksum,
     )
-    with zipfile.ZipFile(archive) as bundle:
-        for info in bundle.infolist():
-            target = (runtime / info.filename).resolve()
-            if not target.is_relative_to(runtime.resolve()):
-                raise RuntimeError("Unsafe runtime archive path")
-        bundle.extractall(runtime)
+    if name.endswith(".zip"):
+        with zipfile.ZipFile(archive) as bundle:
+            for info in bundle.infolist():
+                target = (runtime / info.filename).resolve()
+                if not target.is_relative_to(runtime.resolve()):
+                    raise RuntimeError("Unsafe runtime archive path")
+            bundle.extractall(runtime)
+    else:
+        # Linux/macOS archives contain one llama-<build>/ folder with symlinked libraries.
+        with tarfile.open(archive) as bundle:
+            names = [m.name.rstrip("/") for m in bundle.getmembers()]
+            if any(n != runtime.name and not n.startswith(f"{runtime.name}/") for n in names):
+                raise RuntimeError("Unexpected runtime archive layout")
+            bundle.extractall(runtime.parent, filter="data")
     model = ROOT / "models" / "qwen3-4b"
     for name, checksum in ((FILENAME, MODEL_SHA), ("README.md", None), ("LICENSE", None)):
         download(

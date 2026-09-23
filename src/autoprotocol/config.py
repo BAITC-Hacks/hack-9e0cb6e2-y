@@ -1,3 +1,4 @@
+import sys
 from pathlib import Path
 from typing import Literal
 
@@ -24,7 +25,8 @@ class Settings(BaseSettings):
 
     @property
     def llm_server(self) -> Path:
-        return self.models_dir / "llama-b11124" / "llama-server.exe"
+        name = "llama-server.exe" if sys.platform == "win32" else "llama-server"
+        return self.models_dir / "llama-b11124" / name
 
     @property
     def duration_limit_seconds(self) -> int:
