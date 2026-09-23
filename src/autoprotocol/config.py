@@ -19,6 +19,14 @@ class Settings(BaseSettings):
     stage_timeout_seconds: int = Field(default=1800, ge=30)
 
     @property
+    def llm_model(self) -> Path:
+        return self.models_dir / "qwen3-4b" / "Qwen3-4B-Q4_K_M.gguf"
+
+    @property
+    def llm_server(self) -> Path:
+        return self.models_dir / "llama-b11124" / "llama-server.exe"
+
+    @property
     def duration_limit_seconds(self) -> int:
         return min(self.max_duration_minutes, 10) * 60
 
